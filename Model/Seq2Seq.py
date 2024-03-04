@@ -13,7 +13,7 @@ class Seq2Seq(nn.Module):
   def forward(self, data, target, teacher_forcing_ratio=0.5):
     batch_size = target.shape[1]
     max_len = target.shape[0]
-    vocab_size = self.decoder.ouput_dim
+    vocab_size = self._decoder._output_dim
 
     outputs = torch.zeros(max_len, batch_size, vocab_size).to(data.device)
     encoder_outputs, hidden = self._encoder(data)
@@ -21,10 +21,10 @@ class Seq2Seq(nn.Module):
     inputs = target[0, :]
 
     for t in range(1, max_len):
-      outputs, hidden = self._decoder(inputs, hidden, encoder_outputs)
-      outputs[t] = outputs
+      output, _, _ = self._decoder(inputs, hidden, encoder_outputs)
+      outputs[t] = output
       teacher_force = random.random() < teacher_forcing_ratio
-      top1 = outputs.argmax(1)
+      top1 = output.argmax(1)
       inputs = target[t] if teacher_force else top1
 
     return outputs

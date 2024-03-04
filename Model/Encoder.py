@@ -10,6 +10,7 @@ class Encoder(nn.Module):
 
   def forward(self, x):
     embed = self._embedding(x)
-    outputs, hidden_state = self._lstm(embed)
-
-    return hidden_state
+    outputs, (hidden_state, cell_state) = self._lstm(embed)
+    # outputs: (batch_size, seq_len, hidden_dim)
+    # hidden_state: [hidden state, cell state] (Bidirectional x number of layers, batch_size, hidden_size)
+    return hidden_state, cell_state

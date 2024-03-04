@@ -6,7 +6,12 @@ from Model.Encoder import Encoder
 from Model.Decoder import Decoder
 from Model.Seq2Seq import Seq2Seq
 
-DATA_PATH = "./data/raw_data/ChatbotData.csv"
+#TODO
+# 1. build evaluate, test, seq2text func.
+# 2. refactor code (+ commit github)
+# 3. build EarlyStopping callback
+
+DATA_PATH = "./Data/raw_data/ChatbotData.csv"
 BATCH_SIZE = 64
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -21,8 +26,8 @@ train_loader = create_dataloader(train_dataset,
                                  batch_size=BATCH_SIZE,
                                  shuffle=True)
 
-INPUT_DIM = len(dataset.tokenizer.vocab)
-OUTPUT_DIM = len(dataset.tokenizer.vocab)
+INPUT_DIM = len(dataset._tokenizer.vocab)
+OUTPUT_DIM = len(dataset._tokenizer.vocab)
 EMBEDDING_DIM = 256
 HIDDEN_DIM = 512
 NUM_LAYERS = 1
@@ -46,13 +51,22 @@ optimizer = optim.Adam(seq.parameters(), lr=LEARNING_RATE)
 
 
 def train(model, train_loader, criterion, optimizer, device):
+  print(model)
   model.train()
   running_loss = 0
 
   for data, target in train_loader:
     data, target = data.to(device), target.to(device)
+
     optimizer.zero_grad()
+
     output = model(data, target)
+    output_dim = output.size(2)
+
+    output = output.reshape(-1,
+                            output_dim)  # (batch_size * seq_len, vocab_len)
+    target = target.reshape(-1)  # (batch_size * seq_len)
+
     loss = criterion(output, target)
     loss.backward()
     optimizer.step()
