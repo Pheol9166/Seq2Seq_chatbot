@@ -1,4 +1,5 @@
 import re
+import pandas as pd
 import urllib.request
 from scipy.sparse import spmatrix
 from konlpy.tag import Okt
@@ -9,7 +10,9 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 class TextTokenizer:
 
-  def __init__(self):
+  def __init__(self, data: pd.Series, label: pd.Series):
+    self.data = data
+    self.label = label
     self.tagger = Okt()
     self.vocab = WordVocab()
     self.vectorizer = None
@@ -27,11 +30,11 @@ class TextTokenizer:
     return re.sub(r'[^가-힣\s]', '', text)
 
   @staticmethod
-  def remove_stopwords(tokenized_text: list[list[str]]) -> list[list[str]]:
+  def remove_stopwords(tokenized_text: list[str]) -> list[str]:
     """_Removing stopwords from text_
   
       Args:
-          tokenized_text (list[list[str]]): _tokenized_text to remove stowords_
+          tokenized_text (list[str]): _tokenized_text to remove stowords_
   
       Returns:
           list[str]: _removed result_
@@ -43,8 +46,7 @@ class TextTokenizer:
     with open("stopwords.txt", "r") as fr:
       stopwords = [word.strip() for word in fr.readlines()]
 
-    return [[token for token in sent if token not in stopwords]
-            for sent in tokenized_text]
+    return [token for token in tokenized_text if token not in stopwords]
 
   def tokenize_text(self, text: str) -> list[str]:
     """_Tokenize text using tokenizer_
@@ -56,9 +58,13 @@ class TextTokenizer:
       Returns:
           list[str]: _tokenized result_
     """
-    return self.tagger.tokenize(text)
+    return self.tagger.morphs(text)
 
-  def build_vocab(self, tokenized_text: list[list[str]]) -> None:
+  def preprocess_text(self, text: str) -> list[str]:
+    return TextTokenizer.remove_stopwords(
+        self.tokenize_text(TextTokenizer.clean_text(text)))
+
+  def build_vocab(self, samples: pd.Series, labels: pd.Series) -> None:
     """_build Vocab from tokens_
   
       Args:
@@ -68,34 +74,58 @@ class TextTokenizer:
           WordVocab: _description_
     """
 
-    for sent in tokenized_text:
-      for token in sent:
-        self.vocab.add_word(token)
+    samples = samples.map(self.preprocess_text)
+    labels = labels.map(self.preprocess_text)
 
-  def text_to_sequence(self, texts: list[str]) -> list[list[int]]:
+    for x, y in zip(samples, labels):
+      for x_tok, y_tok in zip(x, y):
+        self.vocab.add_word(x_tok)
+        self.vocab.add_word(y_tok)
+
+  def load_vocab(self, filename: str) -> None:
+    """_load Vocab from file_
+
+      Args:
+          filename (str): _name of file_
+
+      Returns:
+          WordVocab: _loaded Vocab_
+    """
+    with open(filename, 'r') as fr:
+      for line in fr.readline():
+        word, idx, count = line.strip().split('\t')
+        idx = int(idx)
+        count = int(count)
+        self.vocab.word2idx[word] = idx
+        self.vocab.idx2word[idx] = word
+        self.vocab.count[word] = count
+        self.vocab.idx = max(self.vocab.idx, idx + 1)
+
+  def text_to_sequence(self,
+                       texts: list[str],
+                       vocab_file: str | None = None) -> list[list[int]]:
     """_integer encode using WordVocab_
 
         Args:
-            tokenized_text (list[list[str]]): _tokenized text_
+            text (list[str]): _text to encode_
         Returns:
             list[list[int]]: _result of integer encoding_
         """
-    if self.vocab.idx == 4:
-      raise ValueError("Vocab is not built yet. build vocab first.")
+    if vocab_file is None:
+      self.build_vocab(self.data, self.label)
+    else:
+      self.load_vocab(vocab_file)
 
-    texts = [TextTokenizer.clean_text(text) for text in texts]
-    tokenized_text = [self.tokenize_text(text) for text in texts]
-    tokenized_text = TextTokenizer.remove_stopwords(tokenized_text)
+    tokenized_texts = [self.preprocess_text(sent) for sent in texts]
 
     sequences = []
-    for sent in tokenized_text:
+    for sent in tokenized_texts:
       sent = ['<SOS>'] + sent + ['<EOS>']
       sequence = [
           self.vocab.word2idx.get(token, self.vocab.word2idx['<UNK>'])
           for token in sent
       ]
       sequences.append(sequence)
-
     return sequences
 
   def fit_on_texts(self,
@@ -130,11 +160,11 @@ class TextTokenizer:
     else:
       return self.vectorizer.transform(text)
 
-  def padding(self,
-              encoded_text: list[list[int]],
-              maxlen: int = 3,
-              sos: bool = False,
-              eos: bool = False) -> list[list[int]]:
+  def padding(
+      self,
+      encoded_text: list[list[int]],
+      maxlen: int = 3,
+  ) -> list[list[int]]:
     """_Pad the encoded text using Keras's pad_sequences func_
 
         Args:

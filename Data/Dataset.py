@@ -5,12 +5,13 @@ from utils.TextTokenizer import TextTokenizer
 
 class TextDataset(Dataset):
 
-  tokenizer: TextTokenizer = TextTokenizer()
-
   def __init__(self, text, label, max_len):
     super(TextDataset, self).__init__()
-    self._text = text
-    self._label = label
+    self._tokenizer: TextTokenizer = TextTokenizer(text, label)
+    self._text = self._tokenizer.padding(
+        self._tokenizer.text_to_sequence(text), maxlen=max_len)
+    self._label = self._tokenizer.padding(
+        self._tokenizer.text_to_sequence(label), maxlen=max_len)
     self._max_len = max_len
 
   def __len__(self):
@@ -19,14 +20,6 @@ class TextDataset(Dataset):
   def __getitem__(self, index):
     text = self._text[index]
     label = self._label[index]
-    text_sequence = TextDataset.tokenizer.text_to_sequence(text)
-    padded_text = TextDataset.tokenizer.padding(text_sequence,
-                                                maxlen=self._max_len)
-    label_sequence = TextDataset.tokenizer.text_to_sequence(label)
-    padded_label = TextDataset.tokenizer.padding(label_sequence,
-                                                 maxlen=self._max_len)
 
-    return {
-        'inputs': torch.tensor(padded_text, dtype=torch.long),
-        'labels': torch.tensor(padded_label, dtype=torch.long)
-    }
+    return torch.tensor(text, dtype=torch.long), torch.tensor(label,
+                                                              dtype=torch.long)

@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 
 def load_data(file_path: str) -> pd.DataFrame:
-  return pd.read_csv(file_path, encoding='utf-8', sep=',', skiprows=[0])
+  return pd.read_csv(file_path, encoding='utf-8', sep=',')
 
 
 def load_dataset(file_path: str) -> TextDataset:
@@ -35,26 +35,3 @@ def save_dataset(dataset: TextDataset, file_path: str) -> None:
 def split_data(dataset: TextDataset,
                test_size: float = 0.2) -> tuple[TextDataset, TextDataset]:
   return train_test_split(dataset, test_size=test_size, random_state=42)
-
-
-def load_vocab(filename: str) -> WordVocab:
-  """_load Vocab from file_
-  
-    Args:
-        filename (str): _name of file_
-  
-    Returns:
-        WordVocab: _loaded Vocab_
-  """
-  vocab = WordVocab()
-  with open(filename, 'r') as fr:
-    for line in fr.readline():
-      word, idx, count = line.strip().split('\t')
-      idx = int(idx)
-      count = int(count)
-      vocab.word2idx[word] = idx
-      vocab.idx2word[idx] = word
-      vocab.count[word] = count
-      vocab.idx = max(vocab.idx, idx + 1)
-
-  return vocab
