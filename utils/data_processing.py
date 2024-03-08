@@ -35,3 +35,10 @@ def save_dataset(dataset: TextDataset, file_path: str) -> None:
 def split_data(dataset: TextDataset,
                test_size: float = 0.2) -> tuple[TextDataset, TextDataset]:
   return train_test_split(dataset, test_size=test_size, random_state=42)
+
+
+def load_model(model_path):
+  with open(model_path, 'rb') as f:
+    model = pickle.load(f)
+
+  return model

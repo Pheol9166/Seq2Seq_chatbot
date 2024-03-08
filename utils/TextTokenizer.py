@@ -10,9 +10,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 class TextTokenizer:
 
-  def __init__(self, data: pd.Series, label: pd.Series):
-    self.data = data
-    self.label = label
+  def __init__(self):
     self.tagger = Okt()
     self.vocab = WordVocab()
     self.vectorizer = None
@@ -64,7 +62,7 @@ class TextTokenizer:
     return TextTokenizer.remove_stopwords(
         self.tokenize_text(TextTokenizer.clean_text(text)))
 
-  def build_vocab(self, samples: pd.Series, labels: pd.Series) -> None:
+  def build_vocab(self, samples: list[str]) -> None:
     """_build Vocab from tokens_
   
       Args:
@@ -74,13 +72,11 @@ class TextTokenizer:
           WordVocab: _description_
     """
 
-    samples = samples.map(self.preprocess_text)
-    labels = labels.map(self.preprocess_text)
+    samples = list(map(self.preprocess_text, samples))
 
-    for x, y in zip(samples, labels):
-      for x_tok, y_tok in zip(x, y):
-        self.vocab.add_word(x_tok)
-        self.vocab.add_word(y_tok)
+    for sample in samples:
+      for token in sample:
+        self.vocab.add_word(token)
 
   def load_vocab(self, filename: str) -> None:
     """_load Vocab from file_
@@ -111,10 +107,10 @@ class TextTokenizer:
         Returns:
             list[list[int]]: _result of integer encoding_
         """
-    if vocab_file is None:
-      self.build_vocab(self.data, self.label)
-    else:
-      self.load_vocab(vocab_file)
+    if vocab_file is not None:
+      self.vocab = self.load_vocab(vocab_file)
+
+    self.build_vocab(texts)
 
     tokenized_texts = [self.preprocess_text(sent) for sent in texts]
 
