@@ -25,6 +25,7 @@ class Decoder(nn.Module):
     embed = F.dropout(embed, p=self._dropout)
     output, (hidden_state, cell_state) = self._lstm(embed,
                                                     (hidden_state, cell_state))
+    # output: [seq_length, output_dim]
     output = self._fc_out(output.squeeze(0))
 
     return output, hidden_state, cell_state
