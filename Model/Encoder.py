@@ -12,6 +12,7 @@ class Encoder(nn.Module):
                          batch_first=True)
 
   def forward(self, x):
+    # x: (batch_size, seq_len)
     embed = self._embedding(x)
     outputs, (hidden_state, cell_state) = self._lstm(embed)
     # outputs: (batch_size, seq_len, hidden_dim)

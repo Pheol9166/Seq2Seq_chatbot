@@ -1,6 +1,8 @@
 import torch
 import math
 import pickle
+import matplotlib.pyplot as plt
+from Model.ModelResource import ModelResource
 
 
 class Trainer:
@@ -10,6 +12,7 @@ class Trainer:
     self._optimizer = optimizer
     self._criterion = criterion
     self._device = device
+    self.loss_list = []
 
   def train_epoch(self, train_loader):
     print(self._model)
@@ -33,6 +36,7 @@ class Trainer:
       self._optimizer.step()
 
       running_loss += loss.item()
+      self.loss_list.append(running_loss)
 
     return running_loss / len(train_loader)
 
@@ -54,9 +58,7 @@ class Trainer:
         loss = self._criterion(output, target)
         test_loss += loss.item()
 
-    perplexity = math.exp(test_loss / len(test_loader))
-
-    return perplexity
+    return test_loss / len(test_loader)
 
   def train(self, train_loader, test_loader, epochs=10):
     for epoch in range(epochs):
@@ -66,8 +68,9 @@ class Trainer:
           f"Epoch {epoch + 1} / {epochs} : Loss {train_loss}, Perplexity {perplexity}"
       )
 
-  def save_model(self, model_path):
-    with open(model_path, 'wb') as f:
-      pickle.dump(self._model, f)
-
-
+  def loss_graph(self):
+    plt.plot(self.loss_list)
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Loss Graph')
+    plt.show()

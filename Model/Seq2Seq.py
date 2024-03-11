@@ -11,8 +11,7 @@ class Seq2Seq(nn.Module):
     self._decoder = decoder
 
   def forward(self, data, target, teacher_forcing_ratio=0.5):
-    batch_size = target.shape[0]
-    max_len = target.shape[1]
+    batch_size, max_len = target.shape
     vocab_size = self._decoder._output_dim
 
     outputs = torch.zeros(max_len, batch_size, vocab_size).to(data.device)
