@@ -24,13 +24,3 @@ class WordVocab():
     """_return length of Vocab_
         """
     return len(self.word2idx)
-
-  def save(self, filename: str):
-    """_save Vocab to file_
-
-        Args:
-            filename (str): _name of file_
-        """
-    with open(filename, 'w') as f:
-      for (word, idx), count in zip(self.word2idx.items(), self.count):
-        f.write(f"{word}\t{idx}\t{count}\n")

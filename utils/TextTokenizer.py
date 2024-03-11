@@ -78,28 +78,8 @@ class TextTokenizer:
       for token in sample:
         self.vocab.add_word(token)
 
-  def load_vocab(self, filename: str) -> None:
-    """_load Vocab from file_
-
-      Args:
-          filename (str): _name of file_
-
-      Returns:
-          WordVocab: _loaded Vocab_
-    """
-    with open(filename, 'r') as fr:
-      for line in fr.readline():
-        word, idx, count = line.strip().split('\t')
-        idx = int(idx)
-        count = int(count)
-        self.vocab.word2idx[word] = idx
-        self.vocab.idx2word[idx] = word
-        self.vocab.count[word] = count
-        self.vocab.idx = max(self.vocab.idx, idx + 1)
-
   def text_to_sequence(self,
-                       texts: list[str],
-                       vocab_file: str | None = None) -> list[list[int]]:
+                       text: str | list[str]) -> list[list[int]]:
     """_integer encode using WordVocab_
 
         Args:
@@ -107,23 +87,29 @@ class TextTokenizer:
         Returns:
             list[list[int]]: _result of integer encoding_
         """
-    if vocab_file is not None:
-      self.vocab = self.load_vocab(vocab_file)
+    if isinstance(text, str):
+      self.vocab.add_word(text)
+      
+      tokenized_text = self.preprocess_text(text)
+      tokenized_text = ['<SOS>'] + tokenized_text + ['<EOS>']
 
-    self.build_vocab(texts)
-
-    tokenized_texts = [self.preprocess_text(sent) for sent in texts]
-
-    sequences = []
-    for sent in tokenized_texts:
-      sent = ['<SOS>'] + sent + ['<EOS>']
-      sequence = [
-          self.vocab.word2idx.get(token, self.vocab.word2idx['<UNK>'])
-          for token in sent
-      ]
-      sequences.append(sequence)
-    return sequences
-
+      sequence = [self.vocab.word2idx.get(token, self.vocab.word2idx['<UNK>']) for token in tokenized_text]
+      return sequence
+    else:
+      self.build_vocab(text)
+      
+      tokenized_texts = [self.preprocess_text(sent) for sent in text]
+  
+      sequences = []
+      for sent in tokenized_texts:
+        sent = ['<SOS>'] + sent + ['<EOS>']
+        sequence = [
+            self.vocab.word2idx.get(token, self.vocab.word2idx['<UNK>'])
+            for token in sent
+        ]
+        sequences.append(sequence)
+      return sequences
+  
   def fit_on_texts(self,
                    text: str | list[list[str]],
                    mode: str = 'binary') -> None:
