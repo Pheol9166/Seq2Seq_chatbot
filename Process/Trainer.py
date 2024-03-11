@@ -12,7 +12,8 @@ class Trainer:
     self._optimizer = optimizer
     self._criterion = criterion
     self._device = device
-    self.loss_list = []
+    self.train_loss_list = []
+    self.test_loss_list = []
 
   def train_epoch(self, train_loader):
     print(self._model)
@@ -36,7 +37,7 @@ class Trainer:
       self._optimizer.step()
 
       running_loss += loss.item()
-      self.loss_list.append(running_loss)
+      self.train_loss_list.append(running_loss)
 
     return running_loss / len(train_loader)
 
@@ -57,20 +58,23 @@ class Trainer:
 
         loss = self._criterion(output, target)
         test_loss += loss.item()
+        self.test_loss_list.append(test_loss)
 
     return test_loss / len(test_loader)
 
   def train(self, train_loader, test_loader, epochs=10):
     for epoch in range(epochs):
       train_loss = self.train_epoch(train_loader)
-      perplexity = self.evaluate(test_loader)
+      eval_loss = self.evaluate(test_loader)
       print(
-          f"Epoch {epoch + 1} / {epochs} : Loss {train_loss}, Perplexity {perplexity}"
+          f"Epoch {epoch + 1} / {epochs} : train_loss {train_loss}, eval_loss {eval_loss}"
       )
 
   def loss_graph(self):
-    plt.plot(self.loss_list)
+    plt.plot(self.train_loss_list, 'b')
+    plt.plot(self.test_loss_list, 'orange')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.title('Loss Graph')
+    plt.legend(('Train Loss', 'Test Loss'))
     plt.show()
