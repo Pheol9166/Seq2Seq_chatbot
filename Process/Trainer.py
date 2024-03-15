@@ -1,8 +1,5 @@
 import torch
-import math
-import pickle
 import matplotlib.pyplot as plt
-from Model.ModelResource import ModelResource
 
 
 class Trainer:
@@ -37,9 +34,11 @@ class Trainer:
       self._optimizer.step()
 
       running_loss += loss.item()
-      self.train_loss_list.append(running_loss)
-
-    return running_loss / len(train_loader)
+      
+    train_loss = running_loss / len(train_loader)
+    self.train_loss_list.append(train_loss)
+    
+    return train_loss
 
   def evaluate(self, test_loader):
     with torch.no_grad():
@@ -58,9 +57,11 @@ class Trainer:
 
         loss = self._criterion(output, target)
         test_loss += loss.item()
-        self.test_loss_list.append(test_loss)
 
-    return test_loss / len(test_loader)
+    eval_loss = test_loss / len(test_loader)
+    self.test_loss_list.append(eval_loss)
+    
+    return eval_loss
 
   def train(self, train_loader, test_loader, epochs=10):
     for epoch in range(epochs):
