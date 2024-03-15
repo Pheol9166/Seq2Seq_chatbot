@@ -14,6 +14,7 @@ class TextTokenizer:
     self.tagger = Okt()
     self.vocab = WordVocab()
     self.vectorizer = None
+    self.stopwords = self.load_stopwords()
 
   @staticmethod
   def clean_text(text: str) -> str:
@@ -27,8 +28,16 @@ class TextTokenizer:
     """
     return re.sub(r'[^가-힣\s]', '', text)
 
-  @staticmethod
-  def remove_stopwords(tokenized_text: list[str]) -> list[str]:
+  def load_stopwords(self) -> list[str]:
+    url = "https://raw.githubusercontent.com/stopwords-iso/stopwords-ko/master/raw/gh-stopwords-json-ko.txt"
+    urllib.request.urlretrieve(url=url, filename="stopwords.txt")
+
+    with open("stopwords.txt", "r") as fr:
+      stopwords = [word.strip() for word in fr.readlines()]
+      
+    return stopwords
+
+  def remove_stopwords(self, tokenized_text: list[str]) -> list[str]:
     """_Removing stopwords from text_
   
       Args:
@@ -37,14 +46,7 @@ class TextTokenizer:
       Returns:
           list[str]: _removed result_
     """
-
-    url = "https://raw.githubusercontent.com/stopwords-iso/stopwords-ko/master/raw/gh-stopwords-json-ko.txt"
-    urllib.request.urlretrieve(url=url, filename="stopwords.txt")
-
-    with open("stopwords.txt", "r") as fr:
-      stopwords = [word.strip() for word in fr.readlines()]
-
-    return [token for token in tokenized_text if token not in stopwords]
+    return [token for token in tokenized_text if token not in self.stopwords]
 
   def tokenize_text(self, text: str) -> list[str]:
     """_Tokenize text using tokenizer_
@@ -59,7 +61,7 @@ class TextTokenizer:
     return self.tagger.morphs(text)
 
   def preprocess_text(self, text: str) -> list[str]:
-    return TextTokenizer.remove_stopwords(
+    return self.remove_stopwords(
         self.tokenize_text(TextTokenizer.clean_text(text)))
 
   def build_vocab(self, samples: list[str]) -> None:
@@ -78,8 +80,7 @@ class TextTokenizer:
       for token in sample:
         self.vocab.add_word(token)
 
-  def text_to_sequence(self,
-                       text: str | list[str]) -> list[list[int]]:
+  def text_to_sequence(self, text: str | list[str]) -> list[int] | list[list[int]]:
     """_integer encode using WordVocab_
 
         Args:
@@ -89,17 +90,20 @@ class TextTokenizer:
         """
     if isinstance(text, str):
       self.vocab.add_word(text)
-      
+
       tokenized_text = self.preprocess_text(text)
       tokenized_text = ['<SOS>'] + tokenized_text + ['<EOS>']
 
-      sequence = [self.vocab.word2idx.get(token, self.vocab.word2idx['<UNK>']) for token in tokenized_text]
+      sequence = [
+          self.vocab.word2idx.get(token, self.vocab.word2idx['<UNK>'])
+          for token in tokenized_text
+      ]
       return sequence
     else:
       self.build_vocab(text)
-      
+
       tokenized_texts = [self.preprocess_text(sent) for sent in text]
-  
+
       sequences = []
       for sent in tokenized_texts:
         sent = ['<SOS>'] + sent + ['<EOS>']
@@ -109,7 +113,7 @@ class TextTokenizer:
         ]
         sequences.append(sequence)
       return sequences
-  
+
   def fit_on_texts(self,
                    text: str | list[list[str]],
                    mode: str = 'binary') -> None:
