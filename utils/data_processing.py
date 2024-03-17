@@ -1,8 +1,6 @@
 import pickle
 import pandas as pd
 from Data.Dataset import TextDataset
-from utils.WordVocab import WordVocab
-from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
 
@@ -25,13 +23,3 @@ def create_dataloader(dataset: TextDataset,
                       batch_size: int,
                       shuffle: bool = True) -> DataLoader:
   return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
-
-
-def save_dataset(dataset: TextDataset, file_path: str) -> None:
-  with open(file_path, 'wb') as f:
-    pickle.dump(dataset, f)
-
-
-def split_data(dataset: TextDataset,
-               test_size: float = 0.2) -> tuple[TextDataset, TextDataset]:
-  return train_test_split(dataset, test_size=test_size, random_state=42)

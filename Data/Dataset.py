@@ -1,7 +1,8 @@
 import torch
+import pickle
 from torch.utils.data import Dataset
 from utils.TextTokenizer import TextTokenizer
-
+from sklearn.model_selection import train_test_split
 
 class TextDataset(Dataset):
 
@@ -23,3 +24,10 @@ class TextDataset(Dataset):
 
     return torch.tensor(text, dtype=torch.long), torch.tensor(label,
                                                               dtype=torch.long)
+
+  def split(self, test_size=0.2):
+    return train_test_split(self, test_size=test_size, random_state=42)
+
+  def save(self, file_path: str) -> None:
+    with open(file_path, 'wb') as f:
+      pickle.dump(self, f)
