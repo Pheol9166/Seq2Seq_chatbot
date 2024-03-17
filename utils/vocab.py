@@ -22,5 +22,5 @@ class WordVocab():
 
   def __len__(self):
     """_return length of Vocab_
-        """
+    """
     return len(self.word2idx)

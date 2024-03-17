@@ -1,8 +1,9 @@
 import torch
 import pickle
 from torch.utils.data import Dataset
-from utils.TextTokenizer import TextTokenizer
+from utils.tokenizer import TextTokenizer
 from sklearn.model_selection import train_test_split
+
 
 class TextDataset(Dataset):
 

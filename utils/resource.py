@@ -1,8 +1,8 @@
 import torch
-from Model.Encoder import Encoder
-from Model.Decoder import Decoder
-from Model.Seq2Seq import Seq2Seq
-from utils.TextTokenizer import TextTokenizer
+from Model.encoder import Encoder
+from Model.decoder import Decoder
+from Model.seq2seq import Seq2Seq
+from utils.tokenizer import TextTokenizer
 
 
 class ModelResource:

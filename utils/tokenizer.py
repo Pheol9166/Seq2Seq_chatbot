@@ -3,7 +3,7 @@ import pandas as pd
 import urllib.request
 from scipy.sparse import spmatrix
 from konlpy.tag import Okt
-from utils.WordVocab import WordVocab
+from utils.vocab import WordVocab
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 

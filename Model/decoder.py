@@ -21,7 +21,7 @@ class Decoder(nn.Module):
     # x: 현재 시점의 입력 토큰 (shape: [batch_size])
     # hidden_state: 이전 시점의 은닉 상태 (shape: [num_layers * num_directions, batch_size, hidden_dim])
     x = x.unsqueeze(0)
-    embed = self._embedding(x)
+    embed = self._embedding(x) # shape: [seq_length]
     embed = F.dropout(embed, p=self._dropout)
     output, (hidden_state, cell_state) = self._lstm(embed,
                                                     (hidden_state, cell_state))

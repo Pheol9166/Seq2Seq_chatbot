@@ -1,6 +1,6 @@
 import pickle
 import pandas as pd
-from Data.Dataset import TextDataset
+from Data.dataset import TextDataset
 from torch.utils.data import DataLoader
 
 

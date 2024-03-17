@@ -2,13 +2,14 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
-from hyperparameter import Hyperparmeters
+from utils.hyperparameter import Hyperparmeters
 from utils.config import load_config
 from utils.data_processing import create_dataloader
-from Model.Encoder import Encoder
-from Model.Decoder import Decoder
-from Model.Seq2Seq import Seq2Seq
-from Model.ModelResource import ModelResource
+from utils.resource import ModelResource
+from Model.encoder import Encoder
+from Model.decoder import Decoder
+from Model.seq2seq import Seq2Seq
+
 
 
 class Trainer:
