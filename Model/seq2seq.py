@@ -15,15 +15,15 @@ class Seq2Seq(nn.Module):
     vocab_size = self._decoder._output_dim
 
     outputs = torch.zeros(max_len, batch_size, vocab_size).to(data.device)
-    hidden, encoder_outputs = self._encoder(data)
+    _, hidden, cell = self._encoder(data)
 
-    inputs = target[:, 0]
+    inputs = torch.full((batch_size, ), 1, device=data.device)
 
-    for t in range(1, max_len):
-      output, _, _ = self._decoder(inputs, hidden, encoder_outputs)
+    for t in range(0, max_len):
+      output, hidden, cell = self._decoder(inputs, hidden, cell)
       outputs[t] = output
       teacher_force = random.random() < teacher_forcing_ratio
       top1 = output.argmax(1)
       inputs = target[:, t] if teacher_force else top1
 
-    return outputs
+    return outputs.permute(1, 0, 2)
